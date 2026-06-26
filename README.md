@@ -96,6 +96,22 @@ Everything is tracked — you get full traceability of every tailoring run, outr
 1. **[LinkedIn MCP Server](https://github.com/stickerdaniel/linkedin-mcp-server)** — Profile reading, job search, people search, connection requests
 2. **Chrome MCP** — For profile edits that LinkedIn doesn't expose via API (browser automation)
 
+> **Windows gotcha (LinkedIn MCP login):** don't run the LinkedIn MCP login/setup
+> (`uvx mcp-server-linkedin@latest --login`) from an **Administrator/elevated**
+> terminal. It creates `%USERPROFILE%\.linkedin-mcp\{profile,trace-runs}\` with
+> admin-only ACLs; your agent then runs the MCP at normal integrity, can't write
+> `trace-runs\`, and it crashes on startup (`PermissionError: [WinError 5] Access
+> is denied`, shows as **failed** in `/mcp`). Run the login from a **normal**
+> terminal. If you already hit it, fix the ACLs (preserves cookies/login — no
+> re-login needed) from an elevated PowerShell:
+>
+> ```powershell
+> takeown /F "$env:USERPROFILE\.linkedin-mcp" /R /D Y
+> icacls  "$env:USERPROFILE\.linkedin-mcp" /reset /T /C /Q
+> ```
+>
+> _Thanks to [@juanASP](https://github.com/juanASP) for confirming this on Win11._
+
 ### Browser Setup
 
 Chrome MCP auto-starts a Chrome session on its first tool call — no manual
