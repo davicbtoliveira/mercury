@@ -3,6 +3,7 @@
   import Overview from "./sections/Overview.svelte";
   import Recruiters from "./sections/Recruiters.svelte";
   import Jobs from "./sections/Jobs.svelte";
+  import Search from "./sections/Search.svelte";
   import Profile from "./sections/Profile.svelte";
   import Applications from "./sections/Applications.svelte";
   import Interviews from "./sections/Interviews.svelte";
@@ -18,6 +19,7 @@
   const nav = [
     { id: "overview", label: "Overview", icon: "◎" },
     { id: "profile", label: "Profile", icon: "★" },
+    { id: "search", label: "Search", icon: "⌕" },
     { id: "recruiters", label: "Recruiters", icon: "✦" },
     { id: "jobs", label: "Jobs", icon: "❖" },
     { id: "applications", label: "Applications", icon: "✎" },
@@ -61,6 +63,7 @@
   <main class="main">
     {#if active === "overview"}<Overview {overview} {rev} onnav={(id) => (active = id)} />
     {:else if active === "profile"}<Profile {rev} />
+    {:else if active === "search"}<Search />
     {:else if active === "recruiters"}<Recruiters {rev} />
     {:else if active === "jobs"}<Jobs {rev} />
     {:else if active === "applications"}<Applications {rev} />

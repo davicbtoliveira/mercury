@@ -31,7 +31,7 @@ export async function dashboardCmd(flags: Flags): Promise<void> {
 
   const sockets = new Set<import("bun").ServerWebSocket<WSData>>();
 
-  const server = Bun.serve<WSData, {}>({
+  const server = Bun.serve<WSData>({
     port,
     hostname: "127.0.0.1",
     async fetch(req, srv) {
@@ -61,6 +61,10 @@ export async function dashboardCmd(flags: Flags): Promise<void> {
       if (path.startsWith("/api/")) {
         if (url.searchParams.get("token") !== token) {
           return new Response("forbidden", { status: 403 });
+        }
+        // Search endpoints (Phase 2) — POST with JSON body, hit LinkedIn MCP.
+        if (path.startsWith("/api/search/")) {
+          return handleSearch(path, req);
         }
         return handleApi(path);
       }
@@ -129,8 +133,43 @@ function handleApi(path: string): Response {
   }
 }
 
+async function handleSearch(path: string, req: Request): Promise<Response> {
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  try {
+    const { searchJobs, searchPeople, jobDetails } = await import("../mcp/search.ts");
+    switch (path) {
+      case "/api/search/jobs":
+        return Response.json(
+          await searchJobs({
+            keywords: String(body.keywords ?? ""),
+            location: body.location ? String(body.location) : undefined,
+            workType: body.workType ? String(body.workType) : undefined,
+            maxPages: body.maxPages ? Number(body.maxPages) : undefined,
+          }),
+        );
+      case "/api/search/people":
+        return Response.json(
+          await searchPeople({
+            keywords: String(body.keywords ?? ""),
+            company: body.company ? String(body.company) : undefined,
+            location: body.location ? String(body.location) : undefined,
+          }),
+        );
+      case "/api/search/job-details":
+        return Response.json(await jobDetails(String(body.jobId ?? "")));
+      default:
+        return new Response("not found", { status: 404 });
+    }
+  } catch (err) {
+    return Response.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 502 },
+    );
+  }
+}
+
 async function serveStatic(root: string, path: string, token: string): Promise<Response> {
-  let rel = path === "/" ? "/index.html" : path;
+  const rel = path === "/" ? "/index.html" : path;
   const file = Bun.file(join(root, rel));
   if (await file.exists()) return new Response(file);
   // SPA fallback
