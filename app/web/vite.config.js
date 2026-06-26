@@ -1,9 +1,10 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
 
 // Build to ../web/dist would clash; we build into ./dist and the server resolves it.
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [tailwindcss(), svelte()],
   build: {
     outDir: "dist",
     emptyOutDir: true,

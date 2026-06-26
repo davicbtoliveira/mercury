@@ -1,5 +1,7 @@
 <script>
   import { TOKEN } from "../api.js";
+  import { Tabs } from "bits-ui";
+  import { Search as SearchIcon } from "@lucide/svelte";
 
   let mode = $state("jobs"); // jobs | people
   let keywords = $state("");
@@ -43,10 +45,20 @@
 <p class="page-sub">Instant LinkedIn search · "deep scout" hand-off to the agent comes in Phase 3</p>
 
 <div class="panel">
-  <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button class="tab {mode === 'jobs' ? 'on' : ''}" onclick={() => (mode = 'jobs')}>Jobs</button>
-    <button class="tab {mode === 'people' ? 'on' : ''}" onclick={() => (mode = 'people')}>Recruiters / People</button>
-  </div>
+  <Tabs.Root bind:value={mode}>
+    <Tabs.List class="flex gap-2 mb-3.5">
+      <Tabs.Trigger value="jobs"
+        class="px-3.5 py-[7px] rounded-lg text-[0.85rem] cursor-pointer border border-border-2 bg-panel-2 text-muted
+               data-[state=active]:bg-blue data-[state=active]:text-white data-[state=active]:border-blue">
+        Jobs
+      </Tabs.Trigger>
+      <Tabs.Trigger value="people"
+        class="px-3.5 py-[7px] rounded-lg text-[0.85rem] cursor-pointer border border-border-2 bg-panel-2 text-muted
+               data-[state=active]:bg-blue data-[state=active]:text-white data-[state=active]:border-blue">
+        Recruiters / People
+      </Tabs.Trigger>
+    </Tabs.List>
+  </Tabs.Root>
 
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
     <label>Keywords<input bind:value={keywords} placeholder={mode === 'jobs' ? 'software engineer' : 'recruiter engineer Brazil'} /></label>
@@ -55,6 +67,7 @@
     {/if}
     <label>Location<input bind:value={location} placeholder="São Paulo" /></label>
     <button class="go" onclick={run} disabled={loading || !keywords}>
+      <SearchIcon size={15} strokeWidth={2.2} />
       {loading ? "Searching…" : "Search"}
     </button>
   </div>
@@ -89,12 +102,8 @@
     padding:9px 11px; color:var(--text); font-size:.9rem;
   }
   input:focus { outline:none; border-color:var(--blue); }
-  .tab {
-    background:var(--panel-2); border:1px solid var(--border-2); color:var(--muted);
-    padding:7px 14px; border-radius:8px; cursor:pointer; font-size:.85rem;
-  }
-  .tab.on { background:var(--blue); color:white; border-color:var(--blue); }
   .go {
+    display:inline-flex; align-items:center; gap:7px;
     background:linear-gradient(135deg,var(--blue),var(--cyan)); color:white; border:none;
     padding:9px 18px; border-radius:8px; cursor:pointer; font-weight:600; font-size:.9rem;
   }

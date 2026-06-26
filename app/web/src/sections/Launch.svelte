@@ -1,5 +1,6 @@
 <script>
   import { api, post, subscribe } from "../api.js";
+  import { Rocket, X } from "@lucide/svelte";
 
   let providers = $state([]);
   let provider = $state("opencode");
@@ -138,8 +139,11 @@
   </div>
 
   <div style="margin-top:14px;display:flex;gap:10px">
-    <button class="go" onclick={launch} disabled={running}>{running ? "Running…" : "Launch"}</button>
-    {#if running}<button class="cancel" onclick={cancel}>Cancel</button>{/if}
+    <button class="go" onclick={launch} disabled={running}>
+      <Rocket size={15} strokeWidth={2.2} />
+      {running ? "Running…" : "Launch"}
+    </button>
+    {#if running}<button class="cancel" onclick={cancel}><X size={15} strokeWidth={2.2} /> Cancel</button>{/if}
   </div>
 </div>
 
@@ -164,9 +168,9 @@
     padding:9px 11px; color:var(--text); font-size:.9rem;
   }
   input:focus, select:focus { outline:none; border-color:var(--blue); }
-  .go { background:linear-gradient(135deg,var(--blue),var(--cyan)); color:white; border:none; padding:9px 20px; border-radius:8px; cursor:pointer; font-weight:600; }
+  .go { display:inline-flex; align-items:center; gap:7px; background:linear-gradient(135deg,var(--blue),var(--cyan)); color:white; border:none; padding:9px 20px; border-radius:8px; cursor:pointer; font-weight:600; }
   .go:disabled { opacity:.5; cursor:not-allowed; }
-  .cancel { background:transparent; color:var(--red); border:1px solid var(--red); padding:9px 16px; border-radius:8px; cursor:pointer; }
+  .cancel { display:inline-flex; align-items:center; gap:6px; background:transparent; color:var(--red); border:1px solid var(--red); padding:9px 16px; border-radius:8px; cursor:pointer; }
   .stream { background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:14px; max-height:460px; overflow:auto; font-family:ui-monospace,monospace; font-size:.82rem; }
   .line { padding:1px 0; white-space:pre-wrap; line-height:1.5; }
   .line.msg { color:var(--text); }
