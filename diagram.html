@@ -110,7 +110,7 @@
 <body>
 <div class="wrap">
     <h1>How the LinkedIn Skills Work</h1>
-    <p class="sub">Intent → skill routing → step-by-step automation across LinkedIn MCP + Playwright</p>
+    <p class="sub">Intent → skill routing → step-by-step automation across LinkedIn MCP + Chrome MCP</p>
 
     <!-- entry -->
     <div class="entry">
@@ -159,14 +159,14 @@
             <div class="step"><div class="step-box"><div class="step-n">4</div>
                 <div class="step-title">Edit live via browser</div>
                 <div class="step-desc">Open-to-Work, headline, location, skills, languages, About, projects, experience</div>
-                <span class="tool pw">Playwright · navigate/fill/select</span>
+                <span class="tool pw">Chrome MCP · navigate/fill/click</span>
             </div></div>
             <div class="connector"></div>
 
             <div class="step"><div class="step-box"><div class="step-n">5</div>
                 <div class="step-title">Verify</div>
                 <div class="step-desc">Screenshot each saved change; confirm on profile</div>
-                <span class="tool pw">Playwright · screenshot</span>
+                <span class="tool pw">Chrome MCP · screenshot</span>
             </div></div>
 
             <div class="result">✅ <span><b>Discoverable profile</b> — recruiter-visible, keyword-rich, complete</span></div>
@@ -270,14 +270,14 @@
             <p>Reads profiles & analytics, searches jobs/people/companies, sends connection requests. <code>get_person_profile</code>, <code>search_jobs</code>, <code>search_people</code>, <code>connect_with_person</code>.</p>
         </div>
         <div class="infra-card">
-            <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4a5e8" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Playwright MCP</h3>
-            <p>Drives a logged-in browser over CDP (<code>--remote-debugging-port=9222</code>) to make profile edits LinkedIn's API can't — Open-to-Work, About, skills, projects.</p>
+            <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4a5e8" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Chrome MCP</h3>
+            <p>Drives a logged-in Chrome session (auto-started, no manual launch flags) to make profile edits LinkedIn's API can't — Open-to-Work, About, skills, projects.</p>
         </div>
     </div>
 
     <div class="legend">
         <span><span class="dot" style="background:#4db8e8"></span>LinkedIn MCP call</span>
-        <span><span class="dot" style="background:#c4a5e8"></span>Playwright browser action</span>
+        <span><span class="dot" style="background:#c4a5e8"></span>Chrome MCP browser action</span>
         <span><span class="dot" style="background:#a5b4fc"></span>Agent reasoning</span>
     </div>
 </div>

@@ -11,13 +11,13 @@ description: >-
 # LinkedIn Profile Optimizer
 
 Audit a LinkedIn profile against real recruiter-search signals and fix the
-gaps via Playwright browser automation (CDP).
+gaps via Chrome MCP browser automation.
 
 ## Prerequisites
 
 - **LinkedIn MCP** — for pulling the full profile and analytics
-- **Playwright MCP** — for making edits (connected to a browser with CDP on port 9222 where the user is logged into LinkedIn)
-- User must launch browser with `--remote-debugging-port=9222 --user-data-dir="$HOME/<browser>-cdp-profile"`
+- **Chrome MCP** — for making edits. Auto-starts Chrome on first tool call (no manual launch flags needed); use the session where you're logged into LinkedIn
+- For multi-step edit flows, prefer the `pipeline` tool (navigate → snapshot → click/fill in one call) over individual tool round-trips
 
 ## Workflow
 
@@ -42,7 +42,7 @@ Analyze these signals against recruiter-search behavior:
 
 Present ranked pitfalls with specific, actionable fixes.
 
-### 2. Optimize via Playwright (Priority Order)
+### 2. Optimize via Chrome MCP (Priority Order)
 
 #### A. Open to Work (Highest Impact)
 - Path: Profile → "Open to" button → "Finding a new job"
@@ -128,9 +128,10 @@ mercury activity log --skill profile-optimizer --summary "Audited + fixed {what}
 
 ## Gotchas
 
-1. **Typeahead fields** (Language, Skills): must use ArrowDown + Enter after typing — plain text won't register
-2. **Multiple "Save" buttons**: use the dialog-scoped one, not global nav
-3. **Refs shift on re-render**: after enabling Remote, adding/removing skills, etc. — re-snapshot
-4. **Year dropdowns bloat snapshots**: use depth 7-8 to get field refs without option lists
-5. **"Done" button conflicts**: video player has one too — use Escape to close post-save modals
+1. **Typeahead fields** (Language, Skills): must use ArrowDown + Enter after typing — plain text won't register (use `press_key` after `fill`)
+2. **Multiple "Save" buttons**: use the dialog-scoped one, not global nav — target by the `uid` from the latest `take_snapshot`
+3. **Refs shift on re-render**: after enabling Remote, adding/removing skills, etc. — take a fresh `take_snapshot` (stale `uid`s won't resolve)
+4. **Long option lists bloat snapshots**: year/skill dropdowns are large — prefer acting on the field `uid` directly rather than snapshotting the whole open list
+5. **"Done" button conflicts**: video player has one too — use `press_key` Escape to close post-save modals
 6. **Premium "next action" modals**: appear after saving (suggest connections, ask about skills) — dismiss with Escape or skip
+7. **Use `pipeline` for edit flows**: chain navigate → wait_for → take_snapshot → click/fill to avoid stale refs and reduce round-trips

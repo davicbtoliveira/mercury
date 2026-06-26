@@ -94,24 +94,17 @@ Everything is tracked — you get full traceability of every tailoring run, outr
 ### MCP Servers
 
 1. **[LinkedIn MCP Server](https://github.com/stickerdaniel/linkedin-mcp-server)** — Profile reading, job search, people search, connection requests
-2. **Playwright MCP Server** (or equivalent browser automation) — For profile edits that LinkedIn doesn't expose via API
+2. **Chrome MCP** — For profile edits that LinkedIn doesn't expose via API (browser automation)
 
 ### Browser Setup
 
-Browser automation connects via Chrome DevTools Protocol. Launch with remote debugging enabled:
+Chrome MCP auto-starts a Chrome session on its first tool call — no manual
+`--remote-debugging-port` launch flags required. Just make sure you're logged
+into LinkedIn in that session.
 
-```bash
-# Chrome
-google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-cdp-profile"
-
-# Arc (macOS)
-/Applications/Arc.app/Contents/MacOS/Arc --remote-debugging-port=9222 --user-data-dir="$HOME/arc-cdp-profile"
-
-# Brave
-brave --remote-debugging-port=9222 --user-data-dir="$HOME/brave-cdp-profile"
-```
-
-> **Important:** Quit any existing browser instance first — the port only binds on a fresh launch. You must be logged into LinkedIn in this browser session.
+> **Tip:** For multi-step edit flows the skills use Chrome MCP's `pipeline`
+> tool (navigate → snapshot → click/fill in one call), which is faster and more
+> reliable than individual round-trips.
 
 ## Installation
 

@@ -65,7 +65,7 @@
     <strong style="color:var(--red)">Search failed.</strong>
     <p class="muted" style="font-size:.85rem;margin-top:6px">{error}</p>
     <p class="dim" style="font-size:.8rem;margin-top:6px">
-      Make sure the LinkedIn MCP is reachable and you're logged in to LinkedIn in your CDP browser.
+      Make sure the LinkedIn MCP is reachable and you're logged in to LinkedIn in your browser session.
     </p>
   </div>
 {:else if raw}
