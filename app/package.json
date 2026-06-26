@@ -13,6 +13,7 @@
     "build:web": "cd web && bun install && bun run build",
     "embed": "bun run scripts/embed-assets.ts",
     "build:bin": "bun build src/cli/index.ts --compile --outfile dist/mercury",
+    "build:targets": "bun run gen:version && bun run build:web && bun run embed && bun run scripts/build-targets.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

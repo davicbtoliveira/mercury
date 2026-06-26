@@ -1,0 +1,62 @@
+name: release
+
+# Publish prebuilt mercury binaries when a version tag is pushed.
+#   git tag v0.2.0 && git push origin v0.2.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # required to create the GitHub Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Derive version from tag
+        id: ver
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v0.2.0
+          VERSION="${TAG#v}"                # strip leading v -> 0.2.0
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Pin package.json version to the tag
+        working-directory: app
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          # Update the "version" field so version.gen.ts (and the embedded
+          # binary) report exactly what was released.
+          tmp="$(mktemp)"
+          jq --arg v "$VERSION" '.version = $v' package.json > "$tmp" && mv "$tmp" package.json
+          echo "package.json version -> $(jq -r .version package.json)"
+
+      - name: Build all targets
+        working-directory: app
+        run: bun run build:targets
+
+      - name: List artifacts
+        working-directory: app/dist
+        run: ls -lh mercury-* SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Mercury ${{ steps.ver.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            app/dist/mercury-linux-x64
+            app/dist/mercury-linux-arm64
+            app/dist/mercury-darwin-x64
+            app/dist/mercury-darwin-arm64
+            app/dist/SHA256SUMS

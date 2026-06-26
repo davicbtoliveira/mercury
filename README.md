@@ -138,32 +138,45 @@ into LinkedIn in that session.
 ### One-liner (recommended)
 
 Installs the `mercury` binary **and** copies the skills into your agent's config.
-Run the **same command again any time to update** — it pulls the latest, rebuilds, and reinstalls.
+Run the **same command again any time to update** — it grabs the latest release.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Daniel-Boll/mercury/main/bootstrap.sh | bash
 ```
 
 The bootstrap will:
-- install [Bun](https://bun.sh) if it's missing,
-- clone/update the repo into `~/.mercury/src`,
-- build and link the binary to `~/.local/bin/mercury`,
-- copy the skills into detected agent dirs (`~/.config/opencode/skills`, `~/.claude/skills`).
+- detect your OS/arch and **download a prebuilt binary** from the latest [GitHub Release](https://github.com/Daniel-Boll/mercury/releases) (verifying its SHA256), then link it to `~/.local/bin/mercury` — no build, just `curl`,
+- copy the skills into detected agent dirs (`~/.config/opencode/skills`, `~/.claude/skills`),
+- **fall back to building from source** with [Bun](https://bun.sh) if no prebuilt binary matches your platform (or if you set `MERCURY_FROM_SOURCE=1`).
 
-Env overrides: `MERCURY_REF` (branch/tag), `MERCURY_BIN_DIR`, `MERCURY_SKILLS_DIR`, `MERCURY_NO_SKILLS=1`.
+Prebuilt targets: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`.
+
+Env overrides: `MERCURY_VERSION` (pin a release tag, e.g. `v0.2.0`), `MERCURY_FROM_SOURCE=1` (force a source build), `MERCURY_REF` (branch/tag for source builds), `MERCURY_BIN_DIR`, `MERCURY_SKILLS_DIR`, `MERCURY_NO_SKILLS=1`.
 
 ### Update notifications
 
 `mercury` checks (at most once every 10h, cached in `~/.mercury/update-check.json`)
-whether a newer version exists on `main`, and if so prints a one-line notice
-pointing you at the install command above. The check is best-effort: it has a
-short timeout, never blocks a command, fails silently when offline, and prints
-only to stderr (so skill output on stdout is never affected).
+whether a newer **release** exists, and if so prints a one-line notice pointing
+you at the install command above. The check is best-effort: it has a short
+timeout, never blocks a command, fails silently when offline, and prints only to
+stderr (so skill output on stdout is never affected).
 
-Env overrides: `MERCURY_NO_UPDATE_CHECK=1` to disable it entirely;
-`MERCURY_UPDATE_URL` to point the check at a different `package.json`.
-The version itself is single-sourced from `app/package.json` at build time
-(bump that field when you ship, and older installs will see the notice).
+It queries the [GitHub Releases API](https://api.github.com/repos/Daniel-Boll/mercury/releases/latest)
+for the latest published tag. Env overrides: `MERCURY_NO_UPDATE_CHECK=1` to
+disable it; `MERCURY_UPDATE_URL` to point the check at a different endpoint.
+
+### Cutting a release (maintainers)
+
+Releases are built and published by CI (`.github/workflows/release.yml`) on tag push:
+
+```bash
+git tag v0.3.0 && git push origin v0.3.0
+```
+
+The workflow pins `app/package.json` to the tag version, cross-compiles all four
+targets with `bun build --compile --target=…`, writes `SHA256SUMS`, and attaches
+everything to a new GitHub Release. Older installs then see the update notice and
+the bootstrap one-liner pulls the new binary.
 
 
 > Make sure `~/.local/bin` is on your `PATH` (the installer prints a hint if not).

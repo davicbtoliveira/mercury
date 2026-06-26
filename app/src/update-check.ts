@@ -1,12 +1,13 @@
 /**
- * Update check: tells an installed CLI when a newer version exists on the
- * tracked branch (main), so the user can re-run the one-line installer.
+ * Update check: tells an installed CLI when a newer release exists, so the
+ * user can re-run the one-line installer.
  *
  * Design goals:
  *  - Never block or break a command. All failures are swallowed.
  *  - Hit the network at most once per CHECK_INTERVAL (cached in ~/.mercury/).
- *  - Match the install flow: bootstrap.sh installs app/package.json from `main`,
- *    so "latest" = the `version` field of package.json on `main`.
+ *  - "latest" = the newest published GitHub Release tag (an intentional release,
+ *    not just whatever was committed). The Releases API also isn't subject to
+ *    the raw.githubusercontent.com edge-cache staleness.
  *  - Opt out entirely with MERCURY_NO_UPDATE_CHECK=1.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -15,9 +16,14 @@ import { VERSION } from "./version.gen.ts";
 
 const CHECK_INTERVAL_MS = 10 * 60 * 60 * 1000; // 10 hours
 const FETCH_TIMEOUT_MS = 1500;
-const REPO_RAW =
+/**
+ * GitHub Releases API for the latest published (non-draft, non-prerelease)
+ * release. Override with MERCURY_UPDATE_URL for testing (any URL returning
+ * JSON with a `tag_name` or `version` field works).
+ */
+const RELEASES_API =
   process.env.MERCURY_UPDATE_URL ??
-  "https://raw.githubusercontent.com/Daniel-Boll/mercury/main/app/package.json";
+  "https://api.github.com/repos/Daniel-Boll/mercury/releases/latest";
 const INSTALL_CMD =
   "curl -fsSL https://raw.githubusercontent.com/Daniel-Boll/mercury/main/bootstrap.sh | bash";
 
@@ -74,23 +80,23 @@ async function fetchLatest(): Promise<string | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-    // Cache-bust: raw.githubusercontent.com edge-caches package.json for
-    // ~5 min (max-age=300). An unknown query param forces a fresh read so a
-    // just-pushed release isn't masked by a stale CDN copy. (Skip for file://
-    // URLs used in tests, which don't accept query strings.)
-    const isHttp = /^https?:/i.test(REPO_RAW);
-    const url = isHttp
-      ? `${REPO_RAW}${REPO_RAW.includes("?") ? "&" : "?"}t=${Date.now()}`
-      : REPO_RAW;
-    const res = await fetch(url, {
+    const res = await fetch(RELEASES_API, {
       signal: ctrl.signal,
       cache: "no-store",
-      headers: { accept: "application/json" },
+      headers: {
+        accept: "application/vnd.github+json",
+        // GitHub requires a UA; identify ourselves politely.
+        "user-agent": `mercury/${VERSION}`,
+      },
     });
     clearTimeout(t);
     if (!res.ok) return null;
-    const pkg = (await res.json()) as { version?: string };
-    return typeof pkg.version === "string" ? pkg.version : null;
+    // GitHub Releases returns `tag_name` (e.g. "v0.2.0"); test fixtures may
+    // return `version`. parseSemver tolerates the leading "v".
+    const body = (await res.json()) as { tag_name?: string; version?: string };
+    const raw = body.tag_name ?? body.version;
+    // Normalize "v0.2.0" -> "0.2.0" so it matches VERSION for display + compare.
+    return typeof raw === "string" ? raw.replace(/^v/i, "") : null;
   } catch {
     return null;
   }
