@@ -23,7 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   affected section (+ Overview badges) instead of refetching every mounted
   section. The sidebar "live/offline" dot now reflects the real WebSocket state.
 - **Dashboard UI modernized** to Tailwind v4 with Bits UI headless primitives and
-  Lucide icons (replacing the unicode-glyph nav). Dark theme and colors preserved.
+  Lucide icons. The whole frontend was moved to Tailwind utilities + shared
+  component classes (no per-component `<style>` blocks); the Search tabs and the
+  Launch agent/model/skill pickers now use accessible Bits UI Tabs and Select
+  (proper roles, keyboard nav), and the unicode-glyph nav was replaced with Lucide
+  icons. Dark theme and colors preserved.
 
 ## [0.4.0] - 2026-06-26
 
