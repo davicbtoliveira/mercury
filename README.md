@@ -26,7 +26,20 @@
 
 ---
 
-Mercury is a collection of **AI agent skills** that automate your LinkedIn job search end-to-end. It works with any AI coding assistant that supports skill/instruction files (OpenCode, Cursor, Claude Code, Cline, Aider, etc.) paired with a [LinkedIn MCP Server](https://github.com/stickerdaniel/linkedin-mcp-server) and browser automation.
+Mercury is a collection of **AI agent skills** that automate your LinkedIn job search end-to-end, plus a local dashboard to run and track it all. It works with any AI coding assistant that supports skill files (opencode, Cursor, Claude Code, Cline, …) paired with a [LinkedIn MCP Server](https://github.com/stickerdaniel/linkedin-mcp-server) and Chrome MCP.
+
+## Quick Start
+
+```bash
+# install (or update) — downloads a prebuilt binary and installs the skills
+curl -fsSL https://raw.githubusercontent.com/Daniel-Boll/mercury/main/bootstrap.sh | bash
+
+mercury setup        # copy skills into your detected agents (opencode, Claude Code, …)
+mercury init         # scaffold ~/.mercury/ + database
+mercury dashboard    # open the hub in your browser
+```
+
+Re-run the **same `curl` command any time to update**. See [Installation](#installation) for prebuilt targets, env overrides, and the source-build fallback.
 
 ## The Pipeline
 
@@ -77,23 +90,6 @@ SQLite database at `~/.mercury/mercury.db`.
 
 The `mercury` CLI is both the dashboard launcher **and** the write API the skills
 call (`mercury recruiter add`, `mercury job save`, …) — one schema, one source of truth.
-
-### Install
-
-```bash
-# one-liner — install or update (also copies the skills)
-curl -fsSL https://raw.githubusercontent.com/Daniel-Boll/mercury/main/bootstrap.sh | bash
-
-mercury init                      # scaffold ~/.mercury/ + database
-mercury import-journey JOURNEY.md # optional: migrate an existing journal
-mercury dashboard                 # open the hub
-```
-
-Already have the repo cloned? Run `./install.sh` instead of the curl line.
-
-Requires [Bun](https://bun.sh) (the installer adds it if missing). For the **Launch**
-tab you also need an ACP-capable agent on PATH — `opencode` (native `opencode acp`)
-or `claude` (Claude Code, via `@zed-industries/claude-code-acp`).
 
 ## The `.mercury/` Directory
 
@@ -159,73 +155,41 @@ into LinkedIn in that session.
 
 ## Installation
 
-### One-liner (recommended)
-
-Installs the `mercury` binary **and** copies the skills into your agent's config.
-Run the **same command again any time to update** — it grabs the latest release.
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Daniel-Boll/mercury/main/bootstrap.sh | bash
 ```
 
-The bootstrap will:
-- detect your OS/arch and **download a prebuilt binary** from the latest [GitHub Release](https://github.com/Daniel-Boll/mercury/releases) (verifying its SHA256), then link it to `~/.local/bin/mercury` — no build, just `curl`,
-- copy the skills into detected agent dirs (`~/.config/opencode/skills`, `~/.claude/skills`),
-- **fall back to building from source** with [Bun](https://bun.sh) if no prebuilt binary matches your platform (or if you set `MERCURY_FROM_SOURCE=1`).
+The one-liner installs (or updates) Mercury and copies the skills:
+- detects your OS/arch and **downloads a prebuilt binary** from the latest [GitHub Release](https://github.com/Daniel-Boll/mercury/releases) (SHA256-verified) → `~/.local/bin/mercury` — no build, just `curl`;
+- copies the skills into detected agent dirs (`~/.config/opencode/skills`, `~/.claude/skills`);
+- **falls back to a source build** with [Bun](https://bun.sh) if no prebuilt binary matches your platform.
 
 Prebuilt targets: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`.
 
-Env overrides: `MERCURY_VERSION` (pin a release tag, e.g. `v0.2.0`), `MERCURY_FROM_SOURCE=1` (force a source build), `MERCURY_REF` (branch/tag for source builds), `MERCURY_BIN_DIR`, `MERCURY_SKILLS_DIR`, `MERCURY_NO_SKILLS=1`.
-
-### Update notifications
-
-`mercury` checks (at most once every 10h, cached in `~/.mercury/update-check.json`)
-whether a newer **release** exists, and if so prints a one-line notice pointing
-you at the install command above. The check is best-effort: it has a short
-timeout, never blocks a command, fails silently when offline, and prints only to
-stderr (so skill output on stdout is never affected).
-
-It queries the [GitHub Releases API](https://api.github.com/repos/Daniel-Boll/mercury/releases/latest)
-for the latest published tag. Env overrides: `MERCURY_NO_UPDATE_CHECK=1` to
-disable it; `MERCURY_UPDATE_URL` to point the check at a different endpoint.
-
-### Cutting a release (maintainers)
-
-Releases are built and published by CI (`.github/workflows/release.yml`) on tag push:
-
-```bash
-git tag v0.3.0 && git push origin v0.3.0
-```
-
-The workflow pins `app/package.json` to the tag version, cross-compiles all four
-targets with `bun build --compile --target=…`, writes `SHA256SUMS`, and attaches
-everything to a new GitHub Release. Older installs then see the update notice and
-the bootstrap one-liner pulls the new binary.
-
-
 > Make sure `~/.local/bin` is on your `PATH` (the installer prints a hint if not).
+> Re-run the same command any time to update — `mercury` also prints a one-line
+> notice when a newer release is available.
 
-### Manual (skills only)
+**Env overrides:** `MERCURY_VERSION` (pin a tag, e.g. `v0.2.0`), `MERCURY_FROM_SOURCE=1`,
+`MERCURY_BIN_DIR`, `MERCURY_SKILLS_DIR`, `MERCURY_NO_SKILLS=1`, `MERCURY_NO_UPDATE_CHECK=1`.
 
-Mercury skills are plain markdown files — copy them into your AI assistant's skill directory:
+### Installing the skills (`mercury setup`)
 
-### OpenCode
+The bootstrap copies skills for you. To (re)install them into your agents at any
+time — e.g. after adding a new agent:
+
 ```bash
-cp -r skills/* ~/.config/opencode/skills/
+mercury setup                 # every detected agent (opencode, Claude Code, Cursor, Codex, …)
+mercury setup --agent opencode   # just one
+mercury setup --all              # include agents that aren't detected yet
+mercury setup --skills-dir <path># an explicit directory
 ```
 
-### Cursor / Claude Code / Other
-```bash
-# Place in your project or global config — consult your tool's docs
-cp -r skills/* ~/.your-tool/skills/
-```
+For the **Launch** tab you also need an ACP-capable agent on PATH: `opencode`
+(native `opencode acp`) or `claude` (Claude Code, via `@zed-industries/claude-code-acp`).
 
-Or symlink to stay in sync:
-```bash
-for skill in skills/*/; do
-  ln -sf "$(pwd)/$skill" ~/.config/opencode/skills/
-done
-```
+> Contributing or running from a clone? See [AGENTS.md](AGENTS.md) for the build
+> and dev workflow.
 
 ## Usage
 
@@ -281,24 +245,6 @@ The agent loads these skills automatically when your request matches their descr
 - **Company URN IDs** are required for people search filters — plain names are silently ignored
 - **Typeahead fields** (language, skills) require ArrowDown + Enter after typing
 - **"Notify network" toggle** — always verify it's OFF before saving experience edits
-
-## Directory Structure
-
-```
-skills/
-├── job-scout/
-│   └── SKILL.md
-├── experience-bank/
-│   └── SKILL.md
-├── profile-optimizer/
-│   └── SKILL.md
-├── recruiter-outreach/
-│   └── SKILL.md
-└── resume-tailor/
-    ├── SKILL.md
-    └── references/
-        └── examples.md
-```
 
 ## Keywords
 
